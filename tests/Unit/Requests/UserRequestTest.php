@@ -41,34 +41,37 @@ class UserRequestTest extends TestCase
     {
         return [
             'expect' => [
-                [
-                    'userId'   => 'izumi',
-                    'username' => 'ユーザ名',
-                ],
+                $this->a(),
                 true
             ],
             'userId is null' => [
-                [
-                    'userId'   => null,
-                    'username' => 'ユーザ名',
-                ],
+                $this->b('userId', null),
                 false
             ],
             'userId is brank' => [
-                [
-                    'userId'   => '',
-                    'username' => 'ユーザ名',
-                ],
+                $this->b('userId', ''),
                 false
             ],
             'userId is bran' => [
-                [
-                    'userId'   => '',
-                    'username' => 'ユーザ名',
-                ],
+                $this->b('userId', ''),
                 false
             ],
         ];
+    }
+
+    private function a()
+    {
+        return [
+            'userId'   => 'izumi',
+            'username' => 'ユーザ名',
+        ];
+    }
+
+    private function b($a, $b)
+    {
+        $aab = $this->a();
+        $aab[$a] = $b;
+        return $aab;
     }
 
     /**
