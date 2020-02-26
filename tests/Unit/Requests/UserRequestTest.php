@@ -18,12 +18,13 @@ class UserRequestTest extends TestCase
      * @param 期待値
      *
      * @dataProvider dataprovider
+     * @dataProvider dataprovider2
      */
-    public function testBasicTest(string $item, string $data, bool $expect): void
+    public function testBasicTest(array $item, bool $expect): void
     {
         $request  = new UserRequest();
         $rules    = $request->rules();
-        $dataList = [$item => $data];
+        $dataList = $item;
 
         $validator = Validator::make($dataList, $rules);
         $result    = $validator->passes();
@@ -35,17 +36,77 @@ class UserRequestTest extends TestCase
      * データプロバイダ
      *
      * @return データプロバイダ
-     *
-     * @dataProvider dataprovider
      */
     public function dataprovider(): array
     {
         return [
-            'expect'   => ['username', 'ユーザ名', true],
-            'required' => ['username', null, false],
-            'required' => ['username', '', false],
-            'max'      => ['username', str_repeat('a', 101), false],
-            'max'      => ['username', str_repeat('a', 100), true],
+            'expect' => [
+                [
+                    'userId'   => 'izumi',
+                    'username' => 'ユーザ名',
+                ],
+                true
+            ],
+            'userId is null' => [
+                [
+                    'userId'   => null,
+                    'username' => 'ユーザ名',
+                ],
+                false
+            ],
+            'userId is brank' => [
+                [
+                    'userId'   => '',
+                    'username' => 'ユーザ名',
+                ],
+                false
+            ],
+            'userId is bran' => [
+                [
+                    'userId'   => '',
+                    'username' => 'ユーザ名',
+                ],
+                false
+            ],
+        ];
+    }
+
+    /**
+     * データプロバイダ
+     *
+     * @return データプロバイダ
+     */
+    public function dataprovider2(): array
+    {
+        return [
+            'expect2' => [
+                [
+                    'userId'   => 'izumi',
+                    'username' => 'ユーザ名',
+                ],
+                true
+            ],
+            'userId is null2' => [
+                [
+                    'userId'   => null,
+                    'username' => 'ユーザ名',
+                ],
+                false
+            ],
+            'userId is brank2' => [
+                [
+                    'userId'   => '',
+                    'username' => 'ユーザ名',
+                ],
+                false
+            ],
+            'userId is bran2' => [
+                [
+                    'userId'   => '',
+                    'username' => 'ユーザ名',
+                ],
+                false
+            ],
         ];
     }
 }

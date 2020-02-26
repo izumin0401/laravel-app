@@ -6,7 +6,7 @@ use App\Interfaces\UserInterface;
 
 class UserService implements UserInterface
 {
-    public function fetch() {
+    public function index() {
         return User::all();
     }
 }

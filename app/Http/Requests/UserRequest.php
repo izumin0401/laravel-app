@@ -24,6 +24,7 @@ class UserRequest extends FormRequest
     public function rules()
     {
         return [
+            'userId'   => 'required|max:100',
             'username' => 'required|max:100',
         ];
     }
