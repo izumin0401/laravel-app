@@ -16,6 +16,5 @@ class UserTest extends TestCase
     public function testBasicTest()
     {
         $this->get('/api/user')->assertStatus(200);
-        $this->post('/api/user')->assertStatus(200);
     }
 }

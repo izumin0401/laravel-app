@@ -13,20 +13,17 @@ class UserRequestTest extends TestCase
     /**
      * バリデーションテスト
      *
-     * @param 項目名
-     * @param 値
+     * @param データ
      * @param 期待値
      *
-     * @dataProvider dataprovider
-     * @dataProvider dataprovider2
+     * @dataProvider provideData
      */
-    public function testBasicTest(array $item, bool $expect): void
+    public function testBasicTest(array $data, bool $expect): void
     {
         $request  = new UserRequest();
         $rules    = $request->rules();
-        $dataList = $item;
 
-        $validator = Validator::make($dataList, $rules);
+        $validator = Validator::make($data, $rules);
         $result    = $validator->passes();
 
         $this->assertEquals($expect, $result);
@@ -37,79 +34,38 @@ class UserRequestTest extends TestCase
      *
      * @return データプロバイダ
      */
-    public function dataprovider(): array
+    public function provideData(): array
     {
         return [
-            'expect' => [
-                $this->a(),
-                true
-            ],
-            'userId is null' => [
-                $this->b('userId', null),
-                false
-            ],
-            'userId is brank' => [
-                $this->b('userId', ''),
-                false
-            ],
-            'userId is bran' => [
-                $this->b('userId', ''),
-                false
-            ],
+            'validation name normal'          => [$this->fetchBaseData(), true],
+            'validation name required: null'  => [$this->fetchCustomData('name', null), false],
+            'validation name required: blank' => [$this->fetchCustomData('name', ''), false],
         ];
-    }
-
-    private function a()
-    {
-        return [
-            'userId'   => 'izumi',
-            'username' => 'ユーザ名',
-        ];
-    }
-
-    private function b($a, $b)
-    {
-        $aab = $this->a();
-        $aab[$a] = $b;
-        return $aab;
     }
 
     /**
-     * データプロバイダ
+     * テストの元データを取得する
      *
-     * @return データプロバイダ
+     * @return テストの元データ
      */
-    public function dataprovider2(): array
+    private function fetchBaseData(): array
     {
         return [
-            'expect2' => [
-                [
-                    'userId'   => 'izumi',
-                    'username' => 'ユーザ名',
-                ],
-                true
-            ],
-            'userId is null2' => [
-                [
-                    'userId'   => null,
-                    'username' => 'ユーザ名',
-                ],
-                false
-            ],
-            'userId is brank2' => [
-                [
-                    'userId'   => '',
-                    'username' => 'ユーザ名',
-                ],
-                false
-            ],
-            'userId is bran2' => [
-                [
-                    'userId'   => '',
-                    'username' => 'ユーザ名',
-                ],
-                false
-            ],
+            'name' => 'GeM01odcu5',
         ];
+    }
+
+    /**
+     * テストの元データを取得する
+     *
+     * @param  項目
+     * @param  カスタム値
+     * @return テストの元データ
+     */
+    private function fetchCustomData($column, $customValue): array
+    {
+        $baseData          = $this->fetchBaseData();
+        $baseData[$column] = $customValue;
+        return $baseData;
     }
 }
