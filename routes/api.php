@@ -14,3 +14,5 @@ use Illuminate\Http\Request;
 */
 
 Route::resource('user', 'UserController', ['only' => ['index']]);
+
+Route::resource('mail', 'MailController', ['only' => ['store']]);
