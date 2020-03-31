@@ -1,0 +1,62 @@
+version: 0.2
+
+# https://docs.aws.amazon.com/ja_jp/codebuild/latest/userguide/build-spec-ref.html
+
+env:
+  variables:
+    ENVIRONMENT: prod
+    AWS_DEFAULT_REGION: ap-northeast-1
+    AWS_ACCOUNT_ID: 1234567890
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR... `date`
+
+      # Amazon ECRへのログイン
+      - aws --version
+      - $(aws ecr get-login --region ${AWS_DEFAULT_REGION} --no-include-email)
+
+      # Dockerイメージ ※環境毎に異なるものではないので下記に記載
+      - PROJECT_NAMESPACE=laravel-app
+      - IMAGE_NAME_NGINX=nginx
+      - IMAGE_NAME_PHP_FPM=php-fpm
+
+      # リポジトリURI
+      - REPOSITORY_URI_NGINX=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${PROJECT_NAMESPACE}/${IMAGE_NAME_NGINX}
+      - REPOSITORY_URI_PHP_FPM=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${PROJECT_NAMESPACE}/${IMAGE_NAME_PHP_FPM}
+
+      # イメージタグとしてソースのGitコミットIDの先頭7文字を追加
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+
+      # .env配置
+      - cp env/${ENVIRONMENT}/.env .env
+
+      # composer実行
+      - composer install
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t ${REPOSITORY_URI_NGINX}:latest -f docker/web/Dockerfile .
+      - docker build -t ${REPOSITORY_URI_PHP_FPM}:latest -f docker/app/Dockerfile .
+      - docker tag ${REPOSITORY_URI_NGINX}:latest ${REPOSITORY_URI_NGINX}:${IMAGE_TAG}
+      - docker tag ${REPOSITORY_URI_PHP_FPM}:latest ${REPOSITORY_URI_PHP_FPM}:${IMAGE_TAG}
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push ${REPOSITORY_URI_NGINX}:latest
+      - docker push ${REPOSITORY_URI_NGINX}:${IMAGE_TAG}
+      - docker push ${REPOSITORY_URI_PHP_FPM}:latest
+      - docker push ${REPOSITORY_URI_PHP_FPM}:${IMAGE_TAG}
+
+      - echo Migrate...
+      - docker exec -it app php artisan migrate
+
+      - echo Writing image definitions file...
+      - IMAGE_DIFINITION_NGINX="{\"name\":\"${IMAGE_NAME_NGINX}\",\"imageUri\":\"${REPOSITORY_URI_NGINX}:${IMAGE_TAG}\"}"
+      - IMAGE_DIFINITION_PHP_FPM="{\"name\":\"${IMAGE_NAME_PHP_FPM}\",\"imageUri\":\"${REPOSITORY_URI_PHP_FPM}:${IMAGE_TAG}\"}"
+      - echo "[${IMAGE_DIFINITION_PHP_FPM},${IMAGE_DIFINITION_NGINX}]" > imagedefinitions.json
+artifacts:
+  files: imagedefinitions.json
