@@ -2,11 +2,17 @@ version: 0.2
 
 # https://docs.aws.amazon.com/ja_jp/codebuild/latest/userguide/build-spec-ref.html
 
+# 下記はCodeBuildの環境変数で設定すること
+# ・AWS_DEFAULT_REGION
+# ・AWS_ACCOUNT_ID
+# ・ENVIRONMENT
+
 env:
   variables:
-    ENVIRONMENT: prod
-    AWS_DEFAULT_REGION: ap-northeast-1
-    AWS_ACCOUNT_ID: 1234567890
+    PROJECT_NAMESPACE: laravel-app
+    IMAGE_NAME_NGINX: nginx
+    IMAGE_NAME_PHP_FPM: php-fpm
+    CONTAINER_NAME_PHP_FPM: app
 phases:
   pre_build:
     commands:
@@ -15,11 +21,6 @@ phases:
       # Amazon ECRへのログイン
       - aws --version
       - $(aws ecr get-login --region ${AWS_DEFAULT_REGION} --no-include-email)
-
-      # Dockerイメージ ※環境毎に異なるものではないので下記に記載
-      - PROJECT_NAMESPACE=laravel-app
-      - IMAGE_NAME_NGINX=nginx
-      - IMAGE_NAME_PHP_FPM=php-fpm
 
       # リポジトリURI
       - REPOSITORY_URI_NGINX=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${PROJECT_NAMESPACE}/${IMAGE_NAME_NGINX}
@@ -52,7 +53,7 @@ phases:
       - docker push ${REPOSITORY_URI_PHP_FPM}:${IMAGE_TAG}
 
       - echo Migrate...
-      - docker exec -it app php artisan migrate
+      - docker exec -it ${CONTAINER_NAME_PHP_FPM} php artisan migrate
 
       - echo Writing image definitions file...
       - IMAGE_DIFINITION_NGINX="{\"name\":\"${IMAGE_NAME_NGINX}\",\"imageUri\":\"${REPOSITORY_URI_NGINX}:${IMAGE_TAG}\"}"
